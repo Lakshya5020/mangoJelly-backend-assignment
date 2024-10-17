@@ -14,7 +14,16 @@ const createComic = async (req, res) => {
 
 const getComics = async (req, res) => {
     try {
-        const comics = await Comic.find(); 
+        const { page = 1, limit = 5, sortBy = 'year', author, condition } = req.query;
+        const filter = {};
+        if (author) filter.author = author;
+        if (condition) filter.condition = condition;
+
+        const comics = await Comic.find(filter)
+            .sort({ [sortBy]: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
+
         res.status(200).json(comics);
     } catch (error) {
         res.status(500).send("Error in loading data");
