@@ -1,32 +1,25 @@
 const Comic = require('../models/comicModel');
 
 
-const createComic = async (req, res) => {
-    try {
-        const newComic = await Comic.create(req.body);
-        res.status(201).json(newComic);
-    } catch (error) {
-        res.status(400).send("Some error has occured");
-    }
-};
-
-//--------------------------------------------------------------
-
 const getComics = async (req, res) => {
     try {
-        const { page = 1, limit = 5, sortBy = 'year', author, condition } = req.query;
+        const { page , limit , sortBy, order='asc', author, condition } = req.query;
         const filter = {};
-        if (author) filter.author = author;
-        if (condition) filter.condition = condition;
+        if (author) 
+            filter.author = author;
+        if (condition) 
+            filter.condition = condition;
+
+        const sortOrder = order === 'desc' ? -1 : 1;
 
         const comics = await Comic.find(filter)
-            .sort({ [sortBy]: -1 })
+            .sort({ [sortBy]: sortOrder })
             .limit(limit * 1)
             .skip((page - 1) * limit);
 
         res.status(200).json(comics);
     } catch (error) {
-        res.status(500).send("Error in loading data");
+        res.status(500).send(error.message);
     }
 };
 
@@ -34,27 +27,38 @@ const getComics = async (req, res) => {
 
 const getComicById = async (req, res) => {
     try {
-        const id=req.params.id;
+        const id = req.params.id;
         const comic = await Comic.findById(id);
-        if (!comic) 
+        if (!comic)
             return res.status(404).send("Comic not found");
         res.status(200).json(comic);
     } catch (error) {
-        res.status(500).send("Some error has occured");
+        res.status(500).send(error.message);
     }
 };
 
 //---------------------------------------------------------------
 
+const createComic = async (req, res) => {
+    try {
+        const newComic = await Comic.create(req.body);
+        res.status(201).json(newComic);
+    } catch (error) {
+        res.status(400).send(error.message);
+    }
+};
+
+//--------------------------------------------------------------
+
 const updateComic = async (req, res) => {
     try {
-        const id=req.params.id;
+        const id = req.params.id;
         const updatedComic = await Comic.findByIdAndUpdate(id, req.body, { new: true });
         if (!updatedComic)
             return res.status(404).send("Comic not found");
         res.status(200).json(updatedComic);
     } catch (error) {
-        res.status(400).send("Error in updating comic");
+        res.status(400).send(error.message);
     }
 };
 
@@ -62,14 +66,14 @@ const updateComic = async (req, res) => {
 
 const deleteComic = async (req, res) => {
     try {
-        const id=req.params.id;
+        const id = req.params.id;
         const deletedComic = await Comic.findByIdAndDelete(id);
-        if (!deletedComic) 
+        if (!deletedComic)
             return res.status(404).json("Comic not found");
         res.status(200).json("Successfully deleted the comic");
     } catch (error) {
-        res.status(500).send("Error in deleting comic");
+        res.status(500).send(error.message);
     }
 };
 
-module.exports = { createComic, getComics, getComicById, updateComic, deleteComic };
+module.exports = { getComics, getComicById, createComic, updateComic, deleteComic };
